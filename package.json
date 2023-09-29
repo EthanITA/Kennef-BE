@@ -1,0 +1,29 @@
+{
+  "name": "dashboard-node",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "concurrently \"npx tsc --watch\" \"NODE_ENV=development nodemon -q dist/app.js\""
+  },
+  "dependencies": {
+    "@fastify/swagger": "^8.10.0",
+    "@fastify/swagger-ui": "^1.9.3",
+    "@types/lodash": "^4.14.198",
+    "axios": "^1.5.0",
+    "dotenv": "^16.3.1",
+    "fastify": "^4.23.2",
+    "fastify-type-provider-zod": "^1.1.9",
+    "lodash": "^4.17.21",
+    "zod": "^3.22.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.0",
+    "concurrently": "^8.2.1",
+    "nodemon": "^3.0.1",
+    "pino-pretty": "^10.2.0",
+    "prettier": "3.0.3",
+    "typescript": "^5.2.2"
+  }
+}
