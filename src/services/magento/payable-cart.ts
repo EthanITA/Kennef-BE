@@ -1,5 +1,5 @@
 import { Cart, CartTotal } from '../../types/cart';
-import { Amount, Transaction } from 'paypal-rest-sdk';
+import { Amount, Payment, Transaction } from 'paypal-rest-sdk';
 import fastify from '../../bootstrap/fastify';
 import PayPal from '../PayPal';
 import Magento from './index';
@@ -32,7 +32,7 @@ export default class PayableCart extends Magento {
       .catch(() => undefined);
   }
 
-  async getPaymentLink(): Promise<string | undefined> {
+  async getPaymentLink(redirects: Payment['redirect_urls']): Promise<string | undefined> {
     const [cart, total] = await Promise.all([this.getCart(), this.getTotal()]);
     if (!cart || !total) return undefined;
 
@@ -64,7 +64,7 @@ export default class PayableCart extends Magento {
         shipping: total.shipping_amount.toFixed(2),
       },
     };
-    const paymentLink = await PayPal.getPaymentResponse(ppItemList, ppAmount);
+    const paymentLink = await PayPal.getPaymentResponse(ppItemList, ppAmount, redirects);
     fastify.log.info(`PayPal link for ${this.cartId} --> ${paymentLink}`);
     return paymentLink;
   }

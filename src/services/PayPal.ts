@@ -17,9 +17,13 @@ class PayPal {
     this.currency = 'EUR';
   }
 
-  static async getPaymentResponse(item_list: Transaction['item_list'], amount: Amount): Promise<string | undefined | never> {
+  static async getPaymentResponse(
+    item_list: Transaction['item_list'],
+    amount: Amount,
+    redirect_urls: Payment['redirect_urls'],
+  ): Promise<string | undefined | never> {
     const paypal = new this();
-    const payment = paypal.createPayment(item_list, amount);
+    const payment = paypal.createPayment(item_list, amount, redirect_urls);
     const paymentResponse = await paypal.createSession(payment).catch((err) => {
       fastify.log.error(err);
       return undefined;
@@ -29,7 +33,7 @@ class PayPal {
   }
 
   // Function to create PayPal payment
-  createPayment(item_list: Transaction['item_list'], amount: Amount): Payment {
+  createPayment(item_list: Transaction['item_list'], amount: Amount, redirect_urls: Payment['redirect_urls']): Payment {
     return {
       intent: 'sale',
       payer: {
@@ -41,10 +45,7 @@ class PayPal {
           item_list,
         },
       ],
-      redirect_urls: {
-        return_url: `${process.env.APP_URL}`,
-        cancel_url: `${process.env.APP_URL}`,
-      },
+      redirect_urls,
     };
   }
 
