@@ -24,7 +24,7 @@ try {
   });
 
   fastify.after(() => routes.register(fastify));
-  fastify.listen({ port: 3000, host: '0.0.0.0' }).then();
+  fastify.listen({ port: 3000 }).then();
 } catch (err) {
   fastify.log.error(err);
   process.exit(1);
