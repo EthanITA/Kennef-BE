@@ -1,5 +1,5 @@
 import * as PP from 'paypal-rest-sdk';
-import { Amount, Item, Payment, PaymentResponse } from 'paypal-rest-sdk';
+import { Amount, Payment, PaymentResponse, Transaction } from 'paypal-rest-sdk';
 import fastify from '../bootstrap/fastify';
 
 type Currency = 'EUR' | string;
@@ -17,9 +17,9 @@ class PayPal {
     this.currency = 'EUR';
   }
 
-  static async getPaymentResponse(items: Item[], amount: Amount): Promise<string | undefined | never> {
+  static async getPaymentResponse(item_list: Transaction['item_list'], amount: Amount): Promise<string | undefined | never> {
     const paypal = new this();
-    const payment = paypal.createPayment(items, amount);
+    const payment = paypal.createPayment(item_list, amount);
     const paymentResponse = await paypal.createSession(payment).catch((err) => {
       fastify.log.error(err);
       return undefined;
@@ -29,7 +29,7 @@ class PayPal {
   }
 
   // Function to create PayPal payment
-  createPayment(items: Item[], amount: Amount): Payment {
+  createPayment(item_list: Transaction['item_list'], amount: Amount): Payment {
     return {
       intent: 'sale',
       payer: {
@@ -38,9 +38,7 @@ class PayPal {
       transactions: [
         {
           amount,
-          item_list: {
-            items,
-          },
+          item_list,
         },
       ],
       redirect_urls: {
