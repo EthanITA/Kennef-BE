@@ -1,6 +1,7 @@
 import * as PP from 'paypal-rest-sdk';
 import { Item, Payment, PaymentResponse } from 'paypal-rest-sdk';
 import { sum, toNumber } from 'lodash';
+import fastify from '../bootstrap/fastify';
 
 type Currency = 'EUR' | string;
 
@@ -20,7 +21,11 @@ class PayPal {
   static async getPaymentResponse(items: Item[]): Promise<string | undefined | never> {
     const paypal = new this();
     const payment = paypal.createPayment(items);
-    const paymentResponse = await paypal.createSession(payment);
+    const paymentResponse = await paypal.createSession(payment).catch((err) => {
+      fastify.log.error(err);
+      return undefined;
+    });
+    if (!paymentResponse) return undefined;
     return paypal.getLink(paymentResponse);
   }
 
