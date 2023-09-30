@@ -179,5 +179,13 @@ interface Currency {
 }
 
 interface ExtensionAttributes {
-  shipping_assignments: any[]; // Specify type if known.
+  shipping_assignments: ShippingAssignment[];
+}
+
+interface ShippingAssignment {
+  shipping: {
+    address: CartAddress;
+    method: string;
+  };
+  items: CartItem[];
 }
