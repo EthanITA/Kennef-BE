@@ -5,7 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "npx tsc",
-    "start": "concurrently \"npx tsc --watch\" \"NODE_ENV=development nodemon -q dist/app.js\""
+    "start": "concurrently \"npx tsc --watch\" \"nodemon -q dist/app.js\""
   },
   "dependencies": {
     "@fastify/swagger": "^8.10.0",
