@@ -21,9 +21,10 @@ class PayPal {
     item_list: Transaction['item_list'],
     amount: Amount,
     redirect_urls: Payment['redirect_urls'],
+    custom: Transaction['custom'],
   ): Promise<string | undefined | never> {
     const paypal = new this();
-    const payment = paypal.createPayment(item_list, amount, redirect_urls);
+    const payment = paypal.createPayment(item_list, amount, redirect_urls, custom);
     const paymentResponse = await paypal.createSession(payment).catch((err) => {
       fastify.log.error(err);
       return undefined;
@@ -32,8 +33,22 @@ class PayPal {
     return paypal.getLink(paymentResponse);
   }
 
+  static executePayment(paymentId: string, payerId: string, token: string): Promise<PaymentResponse | never> {
+    return new Promise<PaymentResponse>((resolve, reject) =>
+      PP.payment.execute(paymentId, { payer_id: payerId }, (err, res) => {
+        if (err) return reject(err);
+        return resolve(res);
+      }),
+    );
+  }
+
   // Function to create PayPal payment
-  createPayment(item_list: Transaction['item_list'], amount: Amount, redirect_urls: Payment['redirect_urls']): Payment {
+  createPayment(
+    item_list: Transaction['item_list'],
+    amount: Amount,
+    redirect_urls: Payment['redirect_urls'],
+    custom: Transaction['custom'],
+  ): Payment {
     return {
       intent: 'sale',
       payer: {
@@ -43,6 +58,7 @@ class PayPal {
         {
           amount,
           item_list,
+          custom,
         },
       ],
       redirect_urls,
