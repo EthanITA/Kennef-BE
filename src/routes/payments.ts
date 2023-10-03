@@ -60,9 +60,12 @@ export default [
     ) => {
       const { token, PayerID, paymentId } = request.query;
       const payment = await PayPal.executePayment(paymentId, PayerID, token);
-      if (await GuestCart.verifyPayment(payment)) {
-        // create order
-        return reply.redirect(`${process.env.APP_URL}/order-completed`);
+      const cart = await GuestCart.verifyPayment(payment);
+      if (cart) {
+        const order = await cart.createOrder();
+        if (order && (await order.invoice())) {
+          return reply.redirect(`${process.env.APP_URL}/order-completed?orderId=${order?.id}`);
+        }
       } else {
         return reply.redirect(`${process.env.APP_URL}/cart`);
       }

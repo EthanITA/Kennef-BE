@@ -3,42 +3,39 @@ import { Amount, Payment, PaymentResponse, Transaction } from 'paypal-rest-sdk';
 import fastify from '../../bootstrap/fastify';
 import PayPal from '../PayPal';
 import Magento from './index';
-import axios from 'axios';
+import Order from './order';
 
 export default class PayableCart extends Magento {
   public cart?: Cart;
-  private readonly cartId: string;
-  private readonly isGuest: boolean;
+  public readonly cartId: string;
+  public readonly isGuest: boolean;
 
   constructor(cartId: string, isGuest: boolean) {
-    super();
-    this.axios = axios.create({
-      ...this.axios.defaults,
-      baseURL: `${process.env.MAGENTO_REST_URL}/${isGuest ? 'guest-carts' : 'carts'}`,
-    });
+    super(isGuest ? 'guest-carts' : 'carts');
     this.cartId = cartId;
     this.isGuest = isGuest;
   }
 
-  public static async verifyPayment(payment?: PaymentResponse): Promise<boolean> {
+  public static async verifyPayment(payment?: PaymentResponse): Promise<PayableCart | undefined> {
     try {
-      if (!payment) return false;
-      if (payment.state !== 'approved') return false;
-      if (payment.transactions.length !== 1) return false;
+      if (!payment) return;
+      if (payment.state !== 'approved') return;
+      if (payment.transactions.length !== 1) return;
       const transaction = payment.transactions[0];
-      if (!transaction.custom) return false;
+      if (!transaction.custom) return;
       const { cartId, isGuest } = JSON.parse(transaction.custom) as { cartId: string; isGuest: boolean };
-      const cartTotal = await new PayableCart(cartId, isGuest).getTotal();
-      if (!cartTotal) return false;
+      const cart = new PayableCart(cartId, isGuest);
+      const cartTotal = await cart.getTotal();
+      if (!cartTotal) return;
       const amount = transaction.amount.total;
       const total = cartTotal.grand_total.toFixed(2);
       const approved = amount === total;
-      if (!approved) return false;
+      if (!approved) return;
       fastify.log.info(`PayPal payment for ${cartId} approved`);
-      return true;
+      return cart;
     } catch (e) {
       fastify.log.error(e);
-      return false;
+      return;
     }
   }
 
@@ -99,5 +96,17 @@ export default class PayableCart extends Magento {
     );
     fastify.log.info(`PayPal link for ${this.cartId} --> ${paymentLink}`);
     return paymentLink;
+  }
+
+  public async createOrder(): Promise<Order | undefined> {
+    await this.axios
+      .put(`${this.cartId}/selected-payment-method`, {
+        method: { method: 'banktransfer' },
+      })
+      .catch();
+    return this.axios
+      .put<string>(`${this.cartId}/order`)
+      .then((res) => new Order(res.data))
+      .catch();
   }
 }
