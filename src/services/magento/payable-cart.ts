@@ -7,6 +7,7 @@ import axios from 'axios';
 
 export default class PayableCart extends Magento {
   private readonly cartId: string;
+  private readonly isGuest: boolean;
   public cart?: Cart;
 
   constructor(cartId: string, isGuest: boolean) {
@@ -16,6 +17,7 @@ export default class PayableCart extends Magento {
       baseURL: `${process.env.MAGENTO_REST_URL}/${isGuest ? 'guest-carts' : 'carts'}`,
     });
     this.cartId = cartId;
+    this.isGuest = isGuest;
   }
 
   async getCart(): Promise<Cart | undefined> {
@@ -64,7 +66,15 @@ export default class PayableCart extends Magento {
         shipping: total.shipping_amount.toFixed(2),
       },
     };
-    const paymentLink = await PayPal.getPaymentResponse(ppItemList, ppAmount, redirects, this.cartId);
+    const paymentLink = await PayPal.getPaymentResponse(
+      ppItemList,
+      ppAmount,
+      redirects,
+      JSON.stringify({
+        cartId: this.cartId,
+        isGuest: this.isGuest,
+      }),
+    );
     fastify.log.info(`PayPal link for ${this.cartId} --> ${paymentLink}`);
     return paymentLink;
   }
