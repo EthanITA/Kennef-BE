@@ -33,13 +33,21 @@ class PayPal {
     return paypal.getLink(paymentResponse);
   }
 
-  static executePayment(paymentId: string, payerId: string, token: string): Promise<PaymentResponse | never> {
+  static executePayment(paymentId: string, payerId: string, token: string): Promise<PaymentResponse | undefined> {
     return new Promise<PaymentResponse>((resolve, reject) =>
       PP.payment.execute(paymentId, { payer_id: payerId }, (err, res) => {
         if (err) return reject(err);
         return resolve(res);
       }),
-    );
+    )
+      .then((res) => {
+        fastify.log.info(`PayPal payment response: ${JSON.stringify(res)}`);
+        return res;
+      })
+      .catch((err) => {
+        fastify.log.error(err);
+        return undefined;
+      });
   }
 
   // Function to create PayPal payment
