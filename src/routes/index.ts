@@ -1,6 +1,7 @@
 import { FastifyBaseLogger, FastifyInstance, RawReplyDefaultExpression, RawRequestDefaultExpression, RawServerDefault } from 'fastify';
 import { RouteOptions } from 'fastify/types/route';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
+import payments from './payments';
 
 type RoutePrefix = string;
 type FastifyZod = FastifyInstance<
@@ -11,7 +12,9 @@ type FastifyZod = FastifyInstance<
   ZodTypeProvider
 >;
 
-const routes: Record<RoutePrefix, RouteOptions[]> = {};
+const routes: Record<RoutePrefix, RouteOptions[]> = {
+  payments,
+};
 
 export default {
   register: (fastify: FastifyZod) => {

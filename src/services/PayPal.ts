@@ -41,7 +41,7 @@ class PayPal {
       }),
     )
       .then((res) => {
-        fastify.log.info(`PayPal payment response: ${JSON.stringify(res)}`);
+        fastify.log.info(res);
         return res;
       })
       .catch((err) => {

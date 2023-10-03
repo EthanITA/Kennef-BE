@@ -1,14 +1,14 @@
 import { Cart, CartTotal } from '../../types/cart';
-import { Amount, Payment, Transaction } from 'paypal-rest-sdk';
+import { Amount, Payment, PaymentResponse, Transaction } from 'paypal-rest-sdk';
 import fastify from '../../bootstrap/fastify';
 import PayPal from '../PayPal';
 import Magento from './index';
 import axios from 'axios';
 
 export default class PayableCart extends Magento {
+  public cart?: Cart;
   private readonly cartId: string;
   private readonly isGuest: boolean;
-  public cart?: Cart;
 
   constructor(cartId: string, isGuest: boolean) {
     super();
@@ -18,6 +18,28 @@ export default class PayableCart extends Magento {
     });
     this.cartId = cartId;
     this.isGuest = isGuest;
+  }
+
+  public static async verifyPayment(payment?: PaymentResponse): Promise<boolean> {
+    try {
+      if (!payment) return false;
+      if (payment.state !== 'approved') return false;
+      if (payment.transactions.length !== 1) return false;
+      const transaction = payment.transactions[0];
+      if (!transaction.custom) return false;
+      const { cartId, isGuest } = JSON.parse(transaction.custom) as { cartId: string; isGuest: boolean };
+      const cartTotal = await new PayableCart(cartId, isGuest).getTotal();
+      if (!cartTotal) return false;
+      const amount = transaction.amount.total;
+      const total = cartTotal.grand_total.toFixed(2);
+      const approved = amount === total;
+      if (!approved) return false;
+      fastify.log.info(`PayPal payment for ${cartId} approved`);
+      return true;
+    } catch (e) {
+      fastify.log.error(e);
+      return false;
+    }
   }
 
   async getCart(): Promise<Cart | undefined> {
