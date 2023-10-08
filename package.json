@@ -5,7 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "build": "npx tsc",
-    "start": "concurrently \"npx tsc --watch\" \"nodemon -q dist/app.js\""
+    "start": "concurrently \"npx tsc --watch\" \"nodemon -q dist/app.js\"",
+    "deploy": "docker build --no-cache -t kennef-be . && docker run -p 3000:3000 kennef-be"
   },
   "dependencies": {
     "@fastify/swagger": "^8.10.0",
